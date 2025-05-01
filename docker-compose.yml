@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - '${PORT}:3000'
+    env_file:
+      - .env
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - NOTIFICATION_API_URL=${NOTIFICATION_API_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
