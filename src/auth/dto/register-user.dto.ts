@@ -54,7 +54,7 @@ export class RegisterUserDto {
 
     @ApiProperty({
         description: 'Número de celular (para Twilio SMS) este numero es obligatorio',
-        example: 573145919465,
+        example: 3145919465,
     })
     @IsNumber()
     @IsNotEmpty()
@@ -71,9 +71,13 @@ export class RegisterUserDto {
     @ApiProperty({
         description: 'Tipo de identificación',
         example: 'CC',
+        enum: ['RC', 'TI', 'CC', 'C', 'DE'],
     })
     @IsString()
     @IsNotEmpty()
+    @IsIn(['RC', 'TI', 'CC', 'C', 'DE'], {
+        message: 'El tipo de identificación debe ser uno de: RC: Registro Civil, TI: Tarjeta de identidad, CC: Cédula de ciudadanía , C: Certificaciones / Constancias, DE: Documento extranjero',
+    })
     IDType: string;
 
     @ApiProperty({

@@ -12,7 +12,13 @@ export class RoleService {
     @InjectModel(Access.name) private readonly accessModel: Model<Access>
   ) { }
 
-  create(createRoleDto: CreateRoleDto) {
+  async create(createRoleDto: CreateRoleDto) {
+
+    const exists = await this.roleModel.findOne({ name: createRoleDto.name }).exec();
+    if (exists) {
+      throw new BadRequestException(`El rol '${createRoleDto.name}' ya existe`);
+    }
+
     return this.roleModel.create(createRoleDto);
   }
 

@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { Schema as MongooseSchema, Types } from 'mongoose';
-import { Role as EnumRole } from '../enums/role.enum';
 
 export type RoleDocument = HydratedDocument<Role>;
 
@@ -9,7 +8,7 @@ export type RoleDocument = HydratedDocument<Role>;
     timestamps: true,
 })
 export class Role {
-    @Prop({ required: true, unique: true, enum: EnumRole })
+    @Prop({ required: true, unique: true, index: true })
     name: string;
 
     @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'User', default: [] })
