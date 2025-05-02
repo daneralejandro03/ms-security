@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEmail, IsBoolean, IsNumber, IsOptional, IsDate, MinLength } from 'class-validator';
+import {
+    IsString, IsNotEmpty, IsEmail, IsBoolean, IsNumber, IsOptional, IsDate, Length,
+    IsNumberString, IsIn, Matches
+} from 'class-validator';
 
 export class RegisterUserDto {
 
@@ -9,15 +12,7 @@ export class RegisterUserDto {
     })
     @IsString()
     @IsNotEmpty()
-    firstName: string;
-
-    @ApiPropertyOptional({
-        description: 'Segundo nombre del usuario (opcional)',
-        example: 'Alejandro',
-    })
-    @IsString()
-    @IsOptional()
-    secondName?: string;
+    name: string;
 
     @ApiProperty({
         description: 'Primer apellido del usuario',
@@ -25,22 +20,16 @@ export class RegisterUserDto {
     })
     @IsString()
     @IsNotEmpty()
-    firstLastName: string;
-
-    @ApiPropertyOptional({
-        description: 'Segundo apellido del usuario (opcional)',
-        example: 'Colorado',
-    })
-    @IsString()
-    @IsOptional()
-    secondLastName?: string;
+    lastName: string;
 
     @ApiProperty({
-        description: 'Género del usuario',
+        description: "Género del usuario",
         example: 'Masculino',
+        enum: ['Femenino', 'Masculino', 'Otro'],
     })
     @IsString()
     @IsNotEmpty()
+    @IsIn(['Femenino', 'Masculino', 'Otro'], { message: 'El género debe ser Femenino, Masculino u Otro' })
     gender: string;
 
     @ApiProperty({
@@ -51,14 +40,16 @@ export class RegisterUserDto {
     @IsNotEmpty()
     email: string;
 
+
     @ApiProperty({
-        description: 'Contraseña (mínimo 6 caracteres)',
-        example: '123456789',
-        minLength: 6,
+        description: 'Contraseña fuerte (mínimo 8 caracteres, incluye mayúsculas, minúsculas, números y caracteres especiales)',
+        example: 'Str0ngP@ssw0rd!',
     })
     @IsString()
     @IsNotEmpty()
-    @MinLength(6)
+    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/, {
+        message: 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales',
+    })
     password: string;
 
     @ApiProperty({
@@ -89,8 +80,9 @@ export class RegisterUserDto {
         description: 'Número de identificación',
         example: '100xxxxxxx',
     })
-    @IsString()
-    @IsNotEmpty()
+
+    @IsNumberString({}, { message: 'El número de identificación debe contener solo dígitos' })
+    @Length(7, 10, { message: 'El número de identificación debe tener entre 7 y 10 dígitos' })
     IDNumber: string;
 
     // Campos opcionales para verificación y 2FA

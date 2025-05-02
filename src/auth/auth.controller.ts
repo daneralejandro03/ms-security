@@ -11,6 +11,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ColombianPhonePipe } from '../pipes/colombian-phone.pipe';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -21,7 +22,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Registrar nuevo usuario' })
   @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
-  register(@Body() dto: RegisterUserDto) {
+  register(
+    @Body('cellPhone', ColombianPhonePipe) cellPhone: number,
+    @Body() dto: RegisterUserDto
+  ) {
+    dto.cellPhone = cellPhone;
     return this.authService.register(dto);
   }
 

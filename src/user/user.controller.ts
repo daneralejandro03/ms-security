@@ -16,6 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AccessGuard } from '../guards/access.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../schemas/user.schema';
+import { ColombianPhonePipe } from '../pipes/colombian-phone.pipe';
+
 
 import {
   ApiTags,
@@ -47,10 +49,12 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Datos inválidos o usuario ya existe.' })
   async create(
     @Body() createUserDto: CreateUserDto,
+    @Body('cellPhone', ColombianPhonePipe) cellPhone: number,
     @Req() req: AuthenticatedRequest,
   ) {
     const currentUser = req.user;
     console.log('Usuario actual:', currentUser);
+    createUserDto.cellPhone = cellPhone;
     return this.userService.create(createUserDto, currentUser);
   }
 
