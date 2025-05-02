@@ -31,7 +31,6 @@ export class UserService {
       throw new NotFoundException('Rol destino no encontrado');
     }
 
-    // Si no es Administrador, y quiere crear un Admin: prohibido
     if (
       currentRole.name !== 'Administrator' &&
       targetRole.name === 'Administrator'
@@ -41,23 +40,19 @@ export class UserService {
       );
     }
 
-    // (Opcional) Si solo Administrators y Managers pueden crear usuarios en general:
     if (!['Administrator', 'Manager'].includes(currentRole.name)) {
       throw new ForbiddenException('No tienes permisos para crear usuarios');
     }
 
-    // 2) Verificar email único
     const exists = await this.userModel.findOne({ email: createUserDto.email });
     if (exists) {
       throw new BadRequestException('Email ya registrado');
     }
 
-    // 3) Hash de contraseña y código de verificación
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
 
-    // 4) Transacción para crear usuario y linkear al rol
     const session = await this.connection.startSession();
     session.startTransaction();
     try {
@@ -104,11 +99,72 @@ export class UserService {
     return this.userModel.findById(id).populate('role');
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    currentUser: User
+  ) {
+    const currentRole = await this.roleModel.findById(currentUser.role).exec();
+    if (!currentRole) {
+      throw new ForbiddenException('Rol del usuario actual no válido');
+    }
+
+    const targetUser = await this.userModel.findById(id).populate('role').exec();
+    if (!targetUser) {
+      throw new NotFoundException('Usuario a actualizar no encontrado');
+    }
+    const targetRole = await this.roleModel.findById(targetUser.role).exec();
+
+    if (currentRole.name === 'Administrator') {
+      // OK: Admin puede hacer todo
+    } else if (currentRole.name === 'Manager') {
+
+      if (!targetRole) {
+        throw new NotFoundException('Rol del usuario objetivo no encontrado');
+      }
+
+      if (targetRole.name === 'Administrator') {
+        throw new ForbiddenException(
+          `Como ${currentRole.name} no puedes actualizar usuarios con rol Administrator`,
+        );
+      }
+    } else {
+      throw new ForbiddenException('No tienes permisos para actualizar usuarios');
+    }
+
     return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
   }
 
-  async remove(id: string) {
+  async remove(
+    id: string,
+    currentUser: User
+  ) {
+    const currentRole = await this.roleModel.findById(currentUser.role).exec();
+    if (!currentRole) {
+      throw new ForbiddenException('Rol del usuario actual no válido');
+    }
+
+    const targetUser = await this.userModel.findById(id).populate('role').exec();
+    if (!targetUser) {
+      throw new NotFoundException('Usuario a eliminar no encontrado');
+    }
+    const targetRole = await this.roleModel.findById(targetUser.role).exec();
+
+    if (currentRole.name === 'Administrator') {
+      // OK: Admin puede eliminar todo
+    } else if (currentRole.name === 'Manager') {
+      if (!targetRole) {
+        throw new NotFoundException('Rol del usuario objetivo no encontrado');
+      }
+      if (targetRole.name === 'Administrator') {
+        throw new ForbiddenException(
+          `Como ${currentRole.name} no puedes eliminar usuarios con rol Administrator`,
+        );
+      }
+    } else {
+      throw new ForbiddenException('No tienes permisos para eliminar usuarios');
+    }
+
     return this.userModel.findByIdAndDelete(id);
   }
 }

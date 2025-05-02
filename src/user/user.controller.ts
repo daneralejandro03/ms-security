@@ -84,8 +84,9 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(id, updateUserDto, req.user);
   }
 
   @Delete(':id')
@@ -94,7 +95,10 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Usuario eliminado correctamente.' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   @ApiResponse({ status: 401, description: 'No autorizado.' })
-  async remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.userService.remove(id, req.user);
   }
 }
