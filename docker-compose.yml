@@ -1,22 +1,44 @@
 version: '3.8'
+
+networks:
+  default:
+    driver: bridge
+  microservices-network:
+    external: true
+
 services:
   app:
     build: .
-    ports:
-      - '${PORT}:3000'
+    container_name: ms-security
     env_file:
       - .env
     environment:
       - MONGODB_URI=${MONGODB_URI}
+      - PORT=${PORT}
       - NOTIFICATION_API_URL=${NOTIFICATION_API_URL}
       - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - '${PORT}:3001'
     depends_on:
       - mongo
+    networks:
+      - default
+      - microservices-network
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3001/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: on-failure:3
 
   mongo:
     image: mongo:6.0
+    container_name: ms-security-mongo
     volumes:
       - mongo-data:/data/db
+    networks:
+      - default
 
 volumes:
   mongo-data:
