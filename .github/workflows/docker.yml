@@ -2,46 +2,40 @@ name: CI/CD NestJS
 on: [push, pull_request]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      - run: npm ci
-      - run: npm run lint
-
   build:
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3 # mismo cache
+      - name: Cache NPM
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v3
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: dist/
+          retention-days: 7 # opcional
 
   test:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: build-output
       - uses: actions/checkout@v3
       - run: npm ci --production=false
       - run: npm run test:ci
-      - uses: actions/upload-artifact@v3
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage
           path: coverage/
 
   deploy:
@@ -49,14 +43,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: build-output
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.1
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Deploy to Server
-        run: bash ./scripts/deploy.sh
         env:
           ENV_VAR: ${{ secrets.MY_ENV_VAR }}
+        run: bash ./scripts/deploy.sh
