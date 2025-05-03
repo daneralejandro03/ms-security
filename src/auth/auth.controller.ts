@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Patch, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -10,8 +10,20 @@ import { AuthGuard } from '@nestjs/passport';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ColombianPhonePipe } from '../pipes/colombian-phone.pipe';
+import { Request as ExpressRequest } from 'express';
+
+interface AuthenticatedUser {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface AuthenticatedRequest extends ExpressRequest {
+  user: AuthenticatedUser;
+}
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -82,6 +94,20 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autorizado.' })
   changePassword(@Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar datos personales del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado correctamente.' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  updateProfile(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(req.user.id, dto);
   }
 
   @Post('forgot-password')

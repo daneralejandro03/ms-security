@@ -12,6 +12,7 @@ import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResendCodeDto } from './dto/resend-code.dto';
 import { TwoFactorDto } from './dto/two-factor.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from 'src/schemas/user.schema';
 import { Role } from 'src/schemas/role.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -281,5 +282,44 @@ export class AuthService {
     await user.save();
 
     return { message: 'Contraseña restablecida correctamente' };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+
+    const ALLOWED_FIELDS: (keyof UpdateProfileDto)[] = [
+      'name',
+      'lastName',
+      'gender',
+      'cellPhone',
+      'landline',
+      'IDType',
+      'IDNumber',
+    ];
+
+    const updateData: Record<string, string | number> = {};
+    for (const field of ALLOWED_FIELDS) {
+      if (dto[field] !== undefined) {
+        if (dto[field] !== undefined) {
+          updateData[field] = dto[field];
+        }
+      }
+    }
+
+    const updated = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true, runValidators: true },
+      )
+      .select('-password -role -email');
+
+    if (!updated) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    return {
+      message: 'Perfil actualizado correctamente',
+      user: updated,
+    };
   }
 }
