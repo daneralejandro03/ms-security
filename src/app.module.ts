@@ -10,7 +10,6 @@ import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { AccessModule } from './access/access.module';
 import { SmsModule } from './sms/sms.module';
-import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -34,7 +33,6 @@ import { InventoryModule } from './inventory/inventory.module';
     PermissionModule,
     AccessModule,
     SmsModule,
-    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
