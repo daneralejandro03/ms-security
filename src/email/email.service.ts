@@ -13,7 +13,7 @@ export class EmailService {
 
   async sendMail(payload: CreateEmailDto): Promise<void> {
     try {
-      const response$ = this.http.post('/send-email', payload);
+      const response$ = this.http.post('/email/send', payload);
       const response = await firstValueFrom(response$);
       this.logger.log(`Correo enviado: ${response.status} ${response.statusText}`);
     } catch (error: unknown) {

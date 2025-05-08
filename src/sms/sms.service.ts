@@ -17,7 +17,7 @@ export class SmsService {
   async sendSms(payload: CreateSmDto): Promise<Sms> {
     try {
       const response: AxiosResponse<Sms> = await firstValueFrom(
-        this.http.post('/send-sms', payload),
+        this.http.post('/sms/send', payload),
       );
       const { sid, status } = response.data;
       this.logger.log(`SMS enviado → SID=${sid}, estado=${status}`);
