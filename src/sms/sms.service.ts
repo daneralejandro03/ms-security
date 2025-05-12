@@ -16,10 +16,10 @@ export class SmsService {
 
   async sendSms(payload: CreateSmDto): Promise<Sms> {
     try {
-      const response: AxiosResponse<Sms> = await firstValueFrom(
+      const response: AxiosResponse<{ data: Sms }> = await firstValueFrom(
         this.http.post('/sms/send', payload),
       );
-      const { sid, status } = response.data;
+      const { sid, status } = response.data.data;
       this.logger.log(`SMS enviado → SID=${sid}, estado=${status}`);
       return { sid, status, to: payload.to, body: payload.body };
     } catch (err: unknown) {

@@ -110,13 +110,6 @@ export class CreateUserDto {
     @IsOptional()
     requiresTwoFactor?: boolean;
 
-    @ApiProperty({
-        description: 'ID del rol asignado al usuario',
-        example: '680ee3e85c022987822c83da',
-    })
-    @IsString()
-    @IsNotEmpty()
-    readonly role: string;
 }
 
 

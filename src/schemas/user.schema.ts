@@ -67,6 +67,9 @@ export class User {
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Role', required: true })
     role: Types.ObjectId;
 
+    @Prop({ type: [Number], default: [] })
+    stores: number[];
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

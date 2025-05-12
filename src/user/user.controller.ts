@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req
+  Req,
+  NotFoundException
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { EmailService } from 'src/email/email.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { StoreDto } from './dto/store.dto';
 import { AccessGuard } from '../guards/access.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../schemas/user.schema';
@@ -42,20 +44,22 @@ export class UserController {
     private readonly emailService: EmailService,
   ) { }
 
-  @Post()
+  @Post(':roleId')
   @ApiOperation({ summary: 'Crear un nuevo usuario' })
+  @ApiParam({ name: 'roleId', type: String, description: 'ID del rol a asignar' })
   @ApiBody({ type: CreateUserDto, description: 'Datos para nuevo usuario' })
   @ApiResponse({ status: 201, description: 'Usuario creado correctamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos o usuario ya existe.' })
   async create(
+    @Param('roleId') roleId: string,
     @Body() createUserDto: CreateUserDto,
     @Body('cellPhone', ColombianPhonePipe) cellPhone: number,
     @Req() req: AuthenticatedRequest,
   ) {
     const currentUser = req.user;
     console.log('Usuario actual:', currentUser);
-    createUserDto.cellPhone = cellPhone;
-    return this.userService.create(createUserDto, currentUser);
+    createUserDto.cellPhone = cellPhone;;
+    return this.userService.create(createUserDto, roleId, currentUser);
   }
 
   @Get()
@@ -104,5 +108,64 @@ export class UserController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.userService.remove(id, req.user);
+  }
+
+  @Patch(':id/store')
+  @ApiOperation({ summary: 'Asocia una tienda a un usuario' })
+  @ApiParam({ name: 'id', type: String, description: 'ID del usuario' })
+  @ApiBody({ type: StoreDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Tienda asociada correctamente al usuario',
+    schema: {
+      properties: {
+        message: { type: 'string', example: 'Store añadido al usuario' },
+        storeId: { type: 'number', example: 123 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async addStore(
+    @Param('id') id: string,
+    @Body() dto: StoreDto,
+  ) {
+    const updated = await this.userService.addStoreToUser(id, dto.storeId);
+    if (!updated) throw new NotFoundException(`User #${id} not found`);
+    return { message: 'Store añadido al usuario', storeId: dto.storeId };
+  }
+
+  @Patch(':id/store/remove')
+  @ApiOperation({ summary: 'Desasocia una tienda de un usuario' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'ID del usuario del que se removerá la tienda',
+  })
+  @ApiBody({
+    type: StoreDto,
+    description: 'DTO que contiene el storeId a desasociar',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tienda removida correctamente del usuario',
+    schema: {
+      properties: {
+        message: { type: 'string', example: 'Store removido del usuario' },
+        storeId: { type: 'number', example: 123 },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Usuario o tienda no encontrados' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async removeStore(
+    @Param('id') id: string,
+    @Body() dto: StoreDto,
+  ) {
+    const updated = await this.userService.removeStoreFromUser(id, dto.storeId);
+    if (!updated) {
+      throw new NotFoundException(`User #${id} not found`);
+    }
+    return { message: 'Store removido del usuario', storeId: dto.storeId };
   }
 }
