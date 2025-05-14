@@ -81,6 +81,16 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Get('email/:email')
+  @ApiOperation({ summary: 'Obtener un usuario por su Email' })
+  @ApiParam({ name: 'email', type: String, description: 'ID del usuario' })
+  @ApiResponse({ status: 200, description: 'Usuario encontrado.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  async findOneEmail(@Param('email') email: string) {
+    return this.userService.findOneEmail(email);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un usuario existente' })
   @ApiParam({ name: 'id', type: String, description: 'ID del usuario a actualizar' })

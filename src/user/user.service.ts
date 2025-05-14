@@ -98,11 +98,31 @@ export class UserService {
       plainText: `Tu código es: ${verificationCode}. Expira en 15 minutos.`,
     });
 
-    return { message: 'Usuario creado, revisa tu email para verificar la cuenta' };
+    const userReturn = await this.findOneEmail(createUserDto.email);
+    if (!userReturn) {
+      throw new NotFoundException('Usuario creado no encontrado');
+    }
+
+    return {
+      message: 'Usuario creado, revisa tu email para verificar la cuenta',
+      user: userReturn,
+    };
   }
 
   async findAll() {
     return this.userModel.find();
+  }
+
+  async findOneEmail(email: string) {
+    const user = await this.userModel.findOne({ email }).populate('role');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return {
+      id: user._id,
+      email: user.email,
+      role: user.role._id,
+    }
   }
 
   async findOne(id: string) {

@@ -18,8 +18,11 @@ export class AccessGuard implements CanActivate {
         return path
             .split('/')
             .map(seg => {
-                if (/^[0-9a-fA-F]{24}$/.test(seg)
-                    || (/^\d+$/.test(seg) && !/^v\d+$/.test(seg))) {
+                if (
+                    /^[0-9a-fA-F]{24}$/.test(seg) ||
+                    (/^\d+$/.test(seg) && !/^v\d+$/.test(seg)) ||
+                    /@/.test(seg)
+                ) {
                     return '?';
                 }
                 return seg;
